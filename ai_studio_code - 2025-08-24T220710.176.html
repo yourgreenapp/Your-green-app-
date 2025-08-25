@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Green Care</title>
+    
+    <style>
+        :root {
+            --primary-color: #2e7d32; /* Main Green */
+            --primary-hover: #1b5e20; /* Darker Green for Hover */
+            --secondary-color: #4caf50; /* Lighter Green */
+            --background-color: #f4f6f8; /* Soft Page Background */
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --danger-color: #d32f2f; /* Red for Delete/Cancel */
+            --border-color: #e0e0e0; /* Light border color */
+            --star-color: #FFC107; /* Gold for ratings */
+            --combo-badge-bg: #ff9800; /* Orange for combo offers */
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; }
+        .hidden { display: none !important; }
+        .full-page-loader { display: flex; justify-content: center; align-items: center; height: 100vh; font-size: 1.5rem; color: var(--primary-color); }
+        .page-container { max-width: 1200px; margin: 20px auto; padding: 20px; }
+        .form-container { max-width: 600px; margin: 20px auto; padding: 25px; background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); text-align: center; position: relative; }
+        input, textarea, select { width: calc(100% - 24px); padding: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; transition: border-color 0.3s; }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary-color); outline: none; }
+        .primary-button, .secondary-button, .danger-button { transition: all 0.2s ease-in-out; }
+        .primary-button:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        .secondary-button:hover { background-color: rgba(46, 125, 50, 0.1); transform: translateY(-2px); }
+        .danger-button:hover { background-color: rgba(211, 47, 47, 0.1); transform: translateY(-2px); }
+        .primary-button { background-color: var(--primary-color); color: white; padding: 12px 20px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%; }
+        .secondary-button { background: none; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        .danger-button { background: none; border: 1px solid var(--danger-color); color: var(--danger-color); padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        .app-header { background-color: var(--card-bg); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
+        .app-header h1 { color: var(--primary-color); font-size: 1.8rem; margin: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hero-section { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1497990571654-77aa8ec36003?fit=crop&w=1200&q=80'); background-size: cover; background-position: center; color: white; padding: 80px 20px; text-align: center; border-radius: 0 0 20px 20px; }
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; padding: 0 20px 20px; max-width: 1200px; margin: auto; }
+        @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+        .product-card { position: relative; background: var(--card-bg); padding: 15px; border-radius: 12px; box-shadow: var(--shadow); cursor: pointer; text-align: left; transition: transform 0.2s, box-shadow 0.2s; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .item-list { text-align: left; margin-top: 20px; }
+        .item-card { position: relative; padding: 15px; background: #fafafa; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; }
+        .order-notes { background: #e9e9e9; border-radius: 5px; padding: 10px; margin-top: 10px; font-size: 0.9rem; }
+        .status-Payment-Pending, .status-Shipped, .status-Delivered, .status-Payment-Confirmed, .status-Cancelled { font-weight: bold; }
+        .status-Payment-Pending { color: #f57c00; } .status-Payment-Confirmed { color: #1976d2; } .status-Shipped { color: #388e3c; } .status-Delivered { color: #555; } .status-Cancelled { color: var(--danger-color); }
+        .admin-dashboard .tab-nav { display: flex; border-bottom: 2px solid var(--border-color); overflow-x: auto; }
+        .admin-dashboard .tab-btn { padding: 15px 20px; cursor: pointer; background: none; border: none; font-size: 1rem; font-weight: bold; white-space: nowrap; border-bottom: 3px solid transparent; }
+        .admin-dashboard .tab-btn.active { border-bottom: 3px solid var(--primary-color); color: var(--primary-color); }
+        .admin-dashboard .tab-content { display: none; }
+        .admin-dashboard .tab-content.active { display: block; padding-top: 20px; }
+        .admin-dashboard .table-wrapper { overflow-x: auto; }
+        .admin-dashboard table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .admin-dashboard th, .admin-dashboard td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color); vertical-align: middle; white-space: nowrap; }
+        .admin-dashboard td.wrap-text { white-space: normal; }
+        .whatsapp-fab { position: fixed; bottom: 25px; right: 25px; z-index: 100; }
+        .notification-bell { position: relative; cursor: pointer; font-size: 1.5rem; background: none; border: none; color: var(--primary-color); padding: 0 5px; }
+        .notification-dot { position: absolute; top: 0; right: 0; width: 10px; height: 10px; background-color: var(--danger-color); border-radius: 50%; border: 2px solid white; }
+        
+        .menu-btn { background: none; border: none; font-size: 2rem; cursor: pointer; color: var(--primary-color); z-index: 1002; }
+        .side-nav { height: 100%; width: 0; position: fixed; z-index: 1001; top: 0; left: 0; background-color: #fff; overflow-x: hidden; transition: 0.5s; padding-top: 60px; box-shadow: 3px 0 15px rgba(0,0,0,0.1); }
+        .side-nav a { padding: 10px 15px 10px 32px; text-decoration: none; font-size: 1.2rem; color: #333; display: block; transition: 0.3s; }
+        .side-nav a:hover { color: var(--primary-color); background-color: #f1f1f1;}
+        .side-nav .close-btn { position: absolute; top: 15px; right: 25px; font-size: 36px; }
+        .page-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .filter-modal { position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; }
+        .filter-modal-content { background-color: #fefefe; padding: 25px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 12px; }
+        #file-upload-label { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; border: 2px dashed var(--border-color); border-radius: 8px; cursor: pointer; margin-bottom: 15px; background-color: #fafafa; transition: background-color 0.2s, border-color 0.2s; min-height: 100px; }
+        #file-upload-label:hover { border-color: var(--primary-color); background-color: #f0f8f0; }
+        .wishlist-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer; z-index: 5; }
+        .wishlist-btn.active { color: var(--danger-color); }
+        #cart-icon { position: relative; font-size: 1.5rem; color: var(--primary-color); cursor:pointer; }
+        #cart-count { position: absolute; top: -5px; right: -10px; background-color: var(--danger-color); color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; font-weight: bold; border: 1px solid white; }
+        .star-rating { display: flex; align-items: center; gap: 4px; font-weight: bold; color: var(--text-color); }
+        .star-rating .stars { color: var(--star-color); }
+        .review-form .star-input { display: flex; flex-direction: row-reverse; justify-content: center; }
+        .review-form .star-input input { display: none; }
+        .review-form .star-input label { font-size: 2rem; color: #ccc; cursor: pointer; transition: color 0.2s; }
+        .review-form .star-input input:checked ~ label,
+        .review-form .star-input label:hover,
+        .review-form .star-input label:hover ~ label { color: var(--star-color); }
+        .products-container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .products-container h2 { margin-bottom: 20px; }
+        #analytics-tab .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        #analytics-tab .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
+        #analytics-tab .stat-card h3 { margin: 0 0 10px 0; color: var(--primary-color); }
+        #analytics-tab .stat-card p { font-size: 2rem; font-weight: bold; margin: 0; }
+        .combo-badge { position: absolute; top: 10px; left: 10px; background-color: var(--combo-badge-bg); color: white; padding: 5px 8px; border-radius: 5px; font-size: 0.8rem; font-weight: bold; z-index: 5; }
+        #product-checklist { max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 15px; }
+        #product-checklist label { display: block; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div id="app-root"></div>
+    
+    <a id="whatsapp-button" href="#" class="whatsapp-fab" target="_blank" rel="noopener noreferrer" title="Help on WhatsApp" style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;box-shadow:0 4px 12px rgba(0,0,0,0.2);text-decoration:none;color:white;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+    </a>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // --- CONFIGURATION ---
+        const CLOUDINARY_CLOUD_NAME = "dosdxgao8"; const CLOUDINARY_UPLOAD_PRESET = "Your green care"; const YOUR_QR_CODE_URL = "https://i.imgur.com/YOUR_QR_CODE.png"; const YOUR_UPI_ID = "your-upi-id@okhdfcbank"; const YOUR_WHATSAPP_NUMBER = "919518460245"; const firebaseConfig = { apiKey: "AIzaSyCRnKk_qVvmSpw_t37kp5d3Si8Mgol0YHg", authDomain: "yourgreenapp.firebaseapp.com", projectId: "yourgreenapp", storageBucket: "yourgreenapp.firebasestorage.app", messagingSenderId: "205558339041", appId: "1:205558339041:web:ab6eb512c86f1e91c72ea0" };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth(); const db = firebase.firestore(); const root = document.getElementById('app-root'); const whatsappBtn = document.getElementById('whatsapp-button'); whatsappBtn.href = `https://wa.me/${YOUR_WHATSAPP_NUMBER}?text=${encodeURIComponent("I need help")}`;
+        const appState = { user: null, userData: null, notifications: [], adminNotifications: [], products: [], categories: [], cart: [], currentPage: 'loading', pageData: null, comboOffers: [], navigationHistory: [] };
+        let notificationListener = null; let adminNotificationListener = null; let cartListener = null;
+
+        async function fetchProducts() { try { const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get(); appState.products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); appState.categories = ["All", ...new Set(appState.products.map(p => p.category))]; } catch (error) { console.error("Error fetching products:", error); appState.products = []; } }
+        async function fetchComboOffers() { try { const snapshot = await db.collection('comboOffers').orderBy('createdAt', 'desc').get(); appState.comboOffers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); } catch (error) { console.error("Error fetching combo offers:", error); } }
+        function setupNotificationListener(userId) { if (notificationListener) notificationListener(); notificationListener = db.collection('notifications').where('userId', '==', userId).orderBy('createdAt', 'desc').onSnapshot(querySnapshot => { appState.notifications = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); updateNotificationBellUI(); if (appState.currentPage === 'notifications') { renderApp(); } }); }
+        function setupAdminNotificationListener() { if (adminNotificationListener) adminNotificationListener(); adminNotificationListener = db.collection('admin_notifications').orderBy('createdAt', 'desc').onSnapshot(querySnapshot => { appState.adminNotifications = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data()})); updateAdminNotificationBellUI(); if (appState.currentPage === 'adminNotifications') { renderApp(); } }); }
+        function setupCartListener(userId) { if(cartListener) cartListener(); cartListener = db.collection('users').doc(userId).collection('cart').onSnapshot(snapshot => { appState.cart = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); updateCartIconUI(); }); }
+
+        function renderApp() {
+            const { user, userData, currentPage } = appState;
+            root.innerHTML = '';
+
+            if (currentPage === 'loading') { root.innerHTML = `<div class="full-page-loader">Checking your account...</div>`; return; }
+            if (!user) { root.appendChild(renderLoginPage(currentPage === 'signup')); return; }
+            
+            if (!userData) {
+                root.appendChild(renderCreateProfilePage(user));
+                return;
+            }
+
+            root.appendChild(renderHeader());
+            const pageContent = document.createElement('div');
+            
+            if (currentPage === 'home') pageContent.appendChild(renderHomePage());
+            else if (currentPage === 'admin') pageContent.appendChild(displayAdminDashboard());
+            else if (currentPage === 'productForm') pageContent.appendChild(renderProductForm(appState.pageData));
+            else if (currentPage === 'comboOfferForm') pageContent.appendChild(renderComboOfferForm(appState.pageData));
+            else if (currentPage === 'editProfile') pageContent.appendChild(renderEditProfilePage(appState.pageData));
+            else if (currentPage === 'adminNotifications') pageContent.appendChild(renderAdminNotificationsPage());
+            else if (currentPage === 'productDetail') pageContent.appendChild(renderProductDetailPage(appState.pageData));
+            else if (currentPage === 'comboOfferDetail') pageContent.appendChild(renderComboOfferDetailPage(appState.pageData));
+            else if (currentPage === 'payment') pageContent.appendChild(renderPaymentPage(appState.pageData));
+            else if (currentPage === 'profile') pageContent.appendChild(displayProfilePage());
+            else if (currentPage === 'notifications') pageContent.appendChild(renderNotificationsPage());
+            else if (currentPage === 'wishlist') pageContent.appendChild(renderWishlistPage());
+            else if (currentPage === 'cart') pageContent.appendChild(renderCartPage());
+            else if (currentPage === 'potToPlantMatcher') pageContent.appendChild(renderPotToPlantMatcher());
+            else if (currentPage === 'searchResults') pageContent.appendChild(renderSearchResultsPage(appState.pageData));
+            else if (currentPage === 'filterResults') pageContent.appendChild(renderFilterResultsPage(appState.pageData));
+            else pageContent.appendChild(renderHomePage());
+            
+            root.appendChild(pageContent);
+        }
+        
+        auth.onAuthStateChanged(async(user) => {
+            if (user) {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                appState.user = user;
+                if (userDoc.exists) {
+                    appState.userData = userDoc.data();
+                    if (!appState.userData.wishlist) appState.userData.wishlist = [];
+                    await Promise.all([fetchProducts(), fetchComboOffers()]);
+                    if (appState.userData.isAdmin) { 
+                        setupAdminNotificationListener(); 
+                    } else { 
+                        setupNotificationListener(user.uid); 
+                        setupCartListener(user.uid); 
+                    }
+                    if (appState.currentPage === 'loading' || appState.currentPage === 'login' || appState.currentPage === 'signup') {
+                        appState.currentPage = 'home';
+                    }
+                } else {
+                    appState.currentPage = 'createProfile';
+                    appState.userData = null;
+                }
+            } else {
+                if (notificationListener) notificationListener();
+                if (adminNotificationListener) adminNotificationListener();
+                if (cartListener) cartListener();
+                Object.assign(appState, { user: null, userData: null, notifications: [], adminNotifications: [], products: [], cart: [], currentPage: 'login', navigationHistory: [] });
+            }
+            renderApp();
+        });
+        
+        function navigate(page, data = null) { if (appState.currentPage !== page || JSON.stringify(appState.pageData) !== JSON.stringify(data)) { appState.navigationHistory.push({ page: appState.currentPage, data: appState.pageData }); } appState.currentPage = page; appState.pageData = data; window.scrollTo(0, 0); renderApp(); closeSideNav(); }
+        function goBack() { const lastPage = appState.navigationHistory.pop(); if (lastPage) { appState.currentPage = lastPage.page; appState.pageData = lastPage.data; renderApp(); } else { navigate('home'); } }
+        function updateNotificationBellUI() { const bell = document.getElementById('notification-bell'); if (!bell) return; const hasUnread = appState.notifications.some(n => !n.isRead); const dot = bell.querySelector('.notification-dot'); if (hasUnread) { if (!dot) { const newDot = document.createElement('div'); newDot.className = 'notification-dot'; bell.appendChild(newDot); } } else { if (dot) dot.remove(); } }
+        function updateAdminNotificationBellUI() { const bell = document.getElementById('admin-notification-bell'); if (!bell) return; const hasUnread = appState.adminNotifications.some(n => !n.isRead); const dot = bell.querySelector('.notification-dot'); if (hasUnread) { if (!dot) { const newDot = document.createElement('div'); newDot.className = 'notification-dot'; bell.appendChild(newDot); } } else { if (dot) dot.remove(); } }
+        function updateCartIconUI() { const cartIcon = document.getElementById('cart-icon'); if (!cartIcon) return; let count = 0; appState.cart.forEach(item => { count += item.quantity; }); const countEl = cartIcon.querySelector('#cart-count'); if(count > 0) { if(countEl) { countEl.textContent = count; } else { const newCount = document.createElement('span'); newCount.id = 'cart-count'; newCount.textContent = count; cartIcon.appendChild(newCount); } } else { if(countEl) countEl.remove(); } }
+        
+        function openSideNav() { document.getElementById("side-nav").style.width = "250px"; document.getElementById("page-overlay").classList.remove('hidden'); }
+        function closeSideNav() { const nav = document.getElementById("side-nav"); if(nav) nav.style.width = "0"; const overlay = document.getElementById("page-overlay"); if(overlay) overlay.classList.add('hidden'); }
+
+        function renderHeader() { const headerContainer = document.createElement('div'); let navLinks = `<a href="javascript:void(0)" class="close-btn" onclick="closeSideNav()">&times;</a><a href="#" onclick="navigate('home')">Home</a>`; if (appState.userData.isAdmin) { navLinks += `<a href="#" onclick="navigate('admin')">Admin Panel</a>`; } else { navLinks += `<a href="#" onclick="navigate('profile')">My Profile</a><a href="#" onclick="navigate('wishlist')">My Wishlist</a><a href="#" onclick="navigate('potToPlantMatcher')">Pot-to-Plant Matcher</a>`; } navLinks += `<a href="#" onclick="auth.signOut()">Logout</a>`; const showBackButton = appState.currentPage !== 'home' && appState.currentPage !== 'login' && appState.currentPage !== 'signup' && appState.navigationHistory.length > 0; headerContainer.innerHTML = `<div id="side-nav" class="side-nav">${navLinks}</div><div id="page-overlay" class="page-overlay hidden" onclick="closeSideNav()"></div><header class="app-header"><div style="display: flex; align-items: center; gap: 10px;">${showBackButton ? `<button onclick="goBack()" class="secondary-button" style="padding: 5px 10px; font-size: 1.2rem; border-radius:50%;">&#x2190;</button>` : ''}<h1>Your Green Care</h1></div><div style="display: flex; align-items: center; gap: 15px;">${appState.userData.isAdmin ? `<button id="admin-notification-bell" class="notification-bell" title="Admin Notifications">🔔</button>` : `<div id="cart-icon" title="My Cart">🛒</div><button id="notification-bell" class="notification-bell" title="Notifications">🔔</button>`}<button class="menu-btn" onclick="openSideNav()">&#9776;</button></div></header>`; setTimeout(() => { updateNotificationBellUI(); updateAdminNotificationBellUI(); updateCartIconUI(); }, 100); const userBell = headerContainer.querySelector('#notification-bell'); const adminBell = headerContainer.querySelector('#admin-notification-bell'); const cartIcon = headerContainer.querySelector('#cart-icon'); if (userBell) userBell.onclick = () => navigate('notifications'); if (adminBell) adminBell.onclick = () => navigate('adminNotifications'); if (cartIcon) cartIcon.onclick = () => navigate('cart'); return headerContainer; }
+
+        function renderLoginPage(isSigningUp) { const c = document.createElement('div'); const title = isSigningUp ? 'Create an Account' : 'Welcome'; const btnTxt = isSigningUp ? 'Sign Up' : 'Sign In'; const toggleTxt = isSigningUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"; c.className = 'form-container'; c.innerHTML = `<h2>${title}</h2><form id="auth-form"><input type="email" id="email" placeholder="Email" required /><input type="password" id="password" placeholder="Password" required /><button type="submit" class="primary-button">${btnTxt}</button></form><button id="toggle-auth" style="background:none; border:none; color:var(--primary-color); cursor:pointer; margin-top:15px;">${toggleTxt}</button>`; c.querySelector('#toggle-auth').onclick = () => { appState.currentPage = isSigningUp ? 'login' : 'signup'; renderApp(); }; c.querySelector('#auth-form').addEventListener('submit', e => { e.preventDefault(); const email = c.querySelector('#email').value; const password = c.querySelector('#password').value; if (isSigningUp) auth.createUserWithEmailAndPassword(email, password).catch(err => alert('Sign Up Error: ' + err.message)); else auth.signInWithEmailAndPassword(email, password).catch(err => alert('Sign In Error: ' + err.message)); }); return c; }
+        function renderCreateProfilePage(user) { const c = document.createElement('div'); c.className = 'form-container'; c.innerHTML = `<h2>Create Your Profile</h2><p>Welcome! Just a few more details.</p><input type="text" id="name" placeholder="Full Name" required/><input type="tel" id="phone" placeholder="10-digit mobile" required/><textarea id="address" placeholder="Full Address" required></textarea><button id="save-profile" class="primary-button">Save Profile</button>`; c.querySelector('#save-profile').onclick = async () => { const name = c.querySelector('#name').value; const address = c.querySelector('#address').value; const phone = c.querySelector('#phone').value; if (!name || !address || !phone) return alert('Please fill all fields'); const profile = { name, address, phone, email: user.email, isAdmin: false, wishlist: [], createdAt: new Date() }; try { await db.collection('users').doc(user.uid).set(profile); try { await db.collection('admin_notifications').add({ message: `New user signed up: ${name} (${user.email})`, isRead: false, createdAt: new Date() }); } catch (err) { console.error("Failed to create admin notification:", err); } appState.userData = profile; navigate('home'); } catch (err) { alert("Error saving your profile."); console.error("Profile save error:", err); } }; return c; }
+        
+        function renderHomePage() { 
+            const c = document.createElement('div'); 
+            const maxPrice = appState.products.length > 0 ? Math.ceil(Math.max(...appState.products.map(p => p.price)) / 100) * 100 : 1000; 
+            
+            c.innerHTML = `
+                <div class="hero-section"><h2>Nurture Your Green Dreams</h2><p>Find the perfect home for your plants.</p></div>
+                <div style="padding:20px;max-width:500px;margin: -40px auto 0 auto;">
+                     <form id="search-form" style="display:flex;">
+                        <input type="search" id="search-bar" placeholder="Search all products..." style="width: 100%; padding: 15px; border-radius: 25px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-size: 1rem;"/>
+                    </form>
+                </div>
+                <div style="text-align:center; padding-bottom: 20px;"><button id="show-filters-btn" class="primary-button" style="width: auto;">Show Filters</button></div>
+                <div id="filter-modal" class="filter-modal hidden"><div class="filter-modal-content"><h3>Filters</h3><label>Category</label><select id="filter-category"></select><label>Subcategory</label><select id="filter-subcategory"></select><label>Size</label><select id="filter-size"><option value="All">All</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select><label for="price-slider">Max Price: <span id="price-value">₹${maxPrice}</span></label><input type="range" id="price-slider" min="0" max="${maxPrice}" value="${maxPrice}" style="width:100%;" /><button id="apply-filters-btn" class="primary-button" style="margin-top: 20px;">Apply Filters</button><button id="close-modal-btn" class="secondary-button" style="margin-top: 10px;">Close</button></div></div>
+                
+                <div id="combo-offers-container" class="products-container" style="display:none;">
+                    <h2>Combo Offers</h2>
+                    <div id="combo-offers-grid" class="product-grid"></div>
+                </div>
+                <div id="featured-products-container" class="products-container" style="display:none;">
+                    <h2>Featured Products</h2>
+                    <div id="featured-product-grid" class="product-grid"></div>
+                </div>
+                
+                <div class="products-container">
+                    <h2>All Products</h2>
+                    <div class="product-grid" id="product-grid"></div>
+                </div>
+            `; 
+            
+            c.querySelector('#search-form').onsubmit = (e) => {
+                e.preventDefault();
+                const query = c.querySelector('#search-bar').value;
+                if (query.trim()) {
+                    navigate('searchResults', { query: query.trim() });
+                }
+            };
+
+            const comboContainer = c.querySelector('#combo-offers-container');
+            const comboGrid = c.querySelector('#combo-offers-grid');
+            const activeCombos = appState.comboOffers.filter(o => o.isActive);
+            if(activeCombos.length > 0) {
+                comboGrid.innerHTML = activeCombos.map(offer => {
+                    const originalPrice = offer.productIds.reduce((sum, pId) => { const product = appState.products.find(p => p.id === pId); return sum + (product ? product.price : 0); }, 0);
+                    return `<div class="product-card" data-offerid="${offer.id}"> <div class="combo-badge">COMBO</div> <img src="${offer.imageUrl}" alt="${offer.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;"> <h3 style="margin:10px 0 5px;font-size:1rem;">${offer.name}</h3> <p style="font-weight:bold;color:var(--primary-color);font-size:1.1rem;">₹${offer.price} <span style="text-decoration: line-through; color: #777; font-size: 0.9rem;">₹${originalPrice.toFixed(2)}</span></p> </div>`;
+                }).join('');
+                comboGrid.querySelectorAll('.product-card').forEach(card => card.onclick = () => navigate('comboOfferDetail', card.dataset.offerid));
+                comboContainer.style.display = 'block';
+            }
+            
+            (async () => {
+                try {
+                    const snapshot = await db.collection('products').where('isFeatured', '==', true).orderBy('createdAt', 'desc').limit(4).get();
+                    const featuredProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if(featuredProducts.length > 0) {
+                        const featuredGrid = c.querySelector('#featured-product-grid');
+                        const wishlist = appState.userData.wishlist || [];
+                        featuredGrid.innerHTML = featuredProducts.map(p => `<div class="product-card" data-productid="${p.id}"><button class="wishlist-btn ${wishlist.includes(p.id)?'active':''}" onclick="event.stopPropagation(); window.toggleWishlist('${p.id}')">❤</button><img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;"><h3 style="margin:10px 0 5px;font-size:1rem;">${p.name}</h3>${p.averageRating ? `<div class="star-rating"><span class="stars">★</span> ${p.averageRating.toFixed(1)} (${p.reviewCount || 0})</div>` : ''}<p style="font-weight:bold;color:var(--primary-color);font-size:1.1rem;">₹${p.price}</p></div>`).join('');
+                        featuredGrid.querySelectorAll('.product-card').forEach(card => card.onclick = () => navigate('productDetail', card.dataset.productid));
+                        c.querySelector('#featured-products-container').style.display = 'block';
+                    }
+                } catch (error) { console.error("Error fetching featured products:", error); }
+            })();
+
+            const pGrid = c.querySelector('#product-grid'), modal = c.querySelector('#filter-modal'); 
+            const wishlist = appState.userData.wishlist || []; 
+            pGrid.innerHTML = appState.products.map(p => `<div class="product-card" data-productid="${p.id}"><button class="wishlist-btn ${wishlist.includes(p.id)?'active':''}" onclick="event.stopPropagation(); window.toggleWishlist('${p.id}')">❤</button><img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;"><h3 style="margin:10px 0 5px;font-size:1rem;">${p.name}</h3>${p.averageRating ? `<div class="star-rating"><span class="stars">★</span> ${p.averageRating.toFixed(1)} (${p.reviewCount || 0})</div>` : ''}<p style="font-weight:bold;color:var(--primary-color);font-size:1.1rem;">₹${p.price}</p></div>`).join(''); 
+            pGrid.querySelectorAll('.product-card').forEach(card => card.onclick = () => navigate('productDetail', card.dataset.productid)); 
+            
+            c.querySelector('#show-filters-btn').onclick = () => {
+                const catSelect = modal.querySelector('#filter-category'), priceSlider = modal.querySelector('#price-slider'), priceValue = modal.querySelector('#price-value');
+                const popSubcats = () => {
+                    const subcatSelect = modal.querySelector('#filter-subcategory');
+                    const cat = catSelect.value;
+                    if (cat === 'All') { subcatSelect.innerHTML = '<option value="All">All</option>'; subcatSelect.disabled = true; } else { const subcats = ['All', ...new Set(appState.products.filter(p => p.category === cat).map(p => p.subcategory).filter(Boolean))]; subcatSelect.innerHTML = subcats.map(sc => `<option value="${sc}">${sc}</option>`).join(''); subcatSelect.disabled = false; }
+                    subcatSelect.value = 'All';
+                };
+                catSelect.innerHTML = appState.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+                popSubcats();
+                priceSlider.value = maxPrice;
+                priceValue.textContent = `₹${maxPrice}`;
+                catSelect.onchange = popSubcats;
+                priceSlider.oninput = () => priceValue.textContent = `₹${priceSlider.value}`;
+                modal.classList.remove('hidden');
+            };
+            modal.querySelector('#close-modal-btn').onclick = () => modal.classList.add('hidden');
+            modal.onclick = e => { if (e.target === modal) modal.classList.add('hidden'); };
+            modal.querySelector('#apply-filters-btn').onclick = () => {
+                const filters = {
+                    category: modal.querySelector('#filter-category').value,
+                    subcategory: modal.querySelector('#filter-subcategory').value,
+                    price: Number(modal.querySelector('#price-slider').value),
+                    size: modal.querySelector('#filter-size').value,
+                };
+                modal.classList.add('hidden');
+                navigate('filterResults', { filters });
+            };
+
+            return c; 
+        }
+
+        function renderFilterResultsPage(pageData) {
+            const c = document.createElement('div');
+            c.className = 'page-container';
+            const { filters } = pageData;
+
+            const filteredProducts = appState.products.filter(p => 
+                (filters.category === 'All' || p.category === filters.category) && 
+                (filters.subcategory === 'All' || p.subcategory === filters.subcategory) && 
+                p.price <= filters.price && 
+                (filters.size === 'All' || p.size === filters.size)
+            );
+
+            let resultsHtml = `<div class="form-container" style="max-width:1200px;"><h2>Filtered Results</h2></div>`;
+            
+            if (filteredProducts.length > 0) {
+                resultsHtml += `<div class="products-container"><div class="product-grid">`;
+                const wishlist = appState.userData.wishlist || [];
+                resultsHtml += filteredProducts.map(p => `<div class="product-card" data-productid="${p.id}"><button class="wishlist-btn ${wishlist.includes(p.id)?'active':''}" onclick="event.stopPropagation(); window.toggleWishlist('${p.id}')">❤</button><img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;"><h3 style="margin:10px 0 5px;font-size:1rem;">${p.name}</h3>${p.averageRating ? `<div class="star-rating"><span class="stars">★</span> ${p.averageRating.toFixed(1)} (${p.reviewCount || 0})</div>` : ''}<p style="font-weight:bold;color:var(--primary-color);font-size:1.1rem;">₹${p.price}</p></div>`).join('');
+                resultsHtml += `</div></div>`;
+            } else {
+                resultsHtml += `<div class="form-container"><p>No products match your filters. Try adjusting them.</p></div>`;
+            }
+            
+            c.innerHTML = resultsHtml;
+            c.querySelectorAll('.product-card[data-productid]').forEach(card => card.onclick = () => navigate('productDetail', card.dataset.productid));
+            
+            return c;
+        }
+
+        function renderSearchResultsPage(pageData) {
+            const c = document.createElement('div');
+            c.className = 'page-container';
+            const query = (pageData.query || '').toLowerCase();
+            
+            const matchedProducts = appState.products.filter(p => p.name.toLowerCase().includes(query));
+            const matchedCombos = appState.comboOffers.filter(o => o.isActive && o.name.toLowerCase().includes(query));
+
+            let resultsHtml = `<div class="form-container" style="max-width:1200px;"><h2>Search Results for "${pageData.query}"</h2></div>`;
+            
+            if (matchedCombos.length > 0) {
+                resultsHtml += `<div class="products-container"><h3>Matching Combo Offers</h3><div class="product-grid">`;
+                resultsHtml += matchedCombos.map(offer => {
+                    const originalPrice = offer.productIds.reduce((sum, pId) => { const product = appState.products.find(p => p.id === pId); return sum + (product ? product.price : 0); }, 0);
+                    return `<div class="product-card" data-offerid="${offer.id}"> <div class="combo-badge">COMBO</div> <img src="${offer.imageUrl}" alt="${offer.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;"> <h3 style="margin:10px 0 5px;font-size:1rem;">${offer.name}</h3> <p style="font-weight:bold;color:var(--primary-color);font-size:1.1rem;">₹${offer.price} <span style="text-decoration: line-through; color: #777; font-size: 0.9rem;">₹${originalPrice.toFixed(2)}</span></p> </div>`;
+                }).join('');
+                resultsHtml += `</div></div>`;
+            }
+
+            if (matchedProducts.length > 0) {
+                resultsHtml += `<div class="products-container"><h3>Matching Products</h3><div class="product-grid">`;
+                const wishlist = appState.userData.wishlist || [];
+                resultsHtml += matchedProducts.map(p => `<div class="product-card" data-productid="${p.id}"><button class="wishlist-btn ${wishlist.includes(p.id)?'active':''}" onclick="event.stopPropagation(); window.toggleWishlist('${p.id}')">❤</button><img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;"><h3 style="margin:10px 0 5px;font-size:1rem;">${p.name}</h3>${p.averageRating ? `<div class="star-rating"><span class="stars">★</span> ${p.averageRating.toFixed(1)} (${p.reviewCount || 0})</div>` : ''}<p style="font-weight:bold;color:var(--primary-color);font-size:1.1rem;">₹${p.price}</p></div>`).join('');
+                resultsHtml += `</div></div>`;
+            }
+
+            if (matchedProducts.length === 0 && matchedCombos.length === 0) {
+                resultsHtml += `<div class="form-container"><p>No results found. Try a different search term.</p></div>`;
+            }
+
+            c.innerHTML = resultsHtml;
+            c.querySelectorAll('.product-card[data-productid]').forEach(card => card.onclick = () => navigate('productDetail', card.dataset.productid));
+            c.querySelectorAll('.product-card[data-offerid]').forEach(card => card.onclick = () => navigate('comboOfferDetail', card.dataset.offerid));
+
+            return c;
+        }
+
+        function renderPotToPlantMatcher() {
+            const c = document.createElement('div');
+            c.className = 'form-container';
+            const plants = appState.products.filter(p => p.category && p.category.toLowerCase().includes('plant'));
+            const pots = appState.products.filter(p => p.category && p.category.toLowerCase().includes('pot'));
+
+            c.innerHTML = `
+                <h2>Pot-to-Plant Matcher</h2>
+                <p>Select a plant and a pot to see if they're a good match based on their size!</p>
+                <select id="plant-select">
+                    <option value="">-- Select a Plant --</option>
+                    ${plants.map(p => `<option value="${p.id}">${p.name} (${p.size || 'N/A'})</option>`).join('')}
+                </select>
+                <select id="pot-select">
+                    <option value="">-- Select a Pot --</option>
+                    ${pots.map(p => `<option value="${p.id}">${p.name} (${p.size || 'N/A'})</option>`).join('')}
+                </select>
+                <button id="check-match-btn" class="primary-button">Check Match</button>
+                <div id="match-result" style="margin-top: 20px; font-weight: bold;"></div>
+            `;
+
+            c.querySelector('#check-match-btn').onclick = () => {
+                const plantId = c.querySelector('#plant-select').value;
+                const potId = c.querySelector('#pot-select').value;
+                const resultDiv = c.querySelector('#match-result');
+
+                if (!plantId || !potId) {
+                    resultDiv.textContent = 'Please select both a plant and a pot.';
+                    resultDiv.style.color = 'var(--danger-color)';
+                    return;
+                }
+
+                const plant = appState.products.find(p => p.id === plantId);
+                const pot = appState.products.find(p => p.id === potId);
+
+                if (!plant.size || !pot.size) {
+                    resultDiv.textContent = 'Cannot determine match. Size not set for one or both items.';
+                    resultDiv.style.color = 'var(--danger-color)';
+                    return;
+                }
+
+                if (plant.size === pot.size) {
+                    resultDiv.textContent = `Perfect Match! The ${plant.name} will fit wonderfully in the ${pot.name}.`;
+                    resultDiv.style.color = 'var(--primary-color)';
+                } else {
+                    resultDiv.textContent = `Not a match. The plant size (${plant.size}) does not match the pot size (${pot.size}).`;
+                    resultDiv.style.color = 'var(--danger-color)';
+                }
+            };
+
+            return c;
+        }
+
+        function renderProductDetailPage(productId) { 
+            const p = appState.products.find(p => p.id === productId); 
+            if (!p) { const el = document.createElement('div'); el.className = 'form-container'; el.innerHTML = '<h2>Product not found</h2>'; return el; } 
+            
+            const c = document.createElement('div'); 
+            const isWished = appState.userData.wishlist.includes(p.id); 
+            
+            c.innerHTML = `
+                <div class="form-container">
+                    <button class="wishlist-btn ${isWished?'active':''}" style="top: 20px; right: 20px; z-index: 2;" onclick="window.toggleWishlist('${p.id}')">❤</button>
+                    <img src="${p.imageUrl}" style="width:100%; max-width:400px; border-radius:8px; margin-top: 40px;">
+                    <h2 style="margin: 15px 0;">${p.name}</h2>
+                    ${p.averageRating ? `<div class="star-rating" style="justify-content:center;font-size:1.2rem;margin-bottom:10px;"><span class="stars">★</span> ${p.averageRating.toFixed(1)} <span style="font-size:1rem;color:#777;">(${p.reviewCount || 0} reviews)</span></div>` : '<p>No reviews yet.</p>'}
+                    <p style="font-size:1.5rem; color:var(--primary-color); font-weight:bold;">₹${p.price}</p>
+                    <p style="text-align:left; padding: 0 10px;">${p.description}</p>
+                    <div style="display:flex;gap:10px;margin-top:15px;">
+                        <button id="add-to-cart" class="secondary-button" style="flex:1;">Add to Cart</button>
+                        <button id="buy-now" class="primary-button" style="flex:1;">Buy Now</button>
+                    </div>
+                </div>
+                
+                <div class="page-container">
+                    <hr/>
+                    <div id="reviews-section">
+                        <h3>Reviews</h3>
+                        <div id="reviews-list">Loading reviews...</div>
+                        <div id="review-form-container" class="hidden" style="margin-top:20px;"></div>
+                    </div>
+                    <hr/>
+                    <div id="related-products-container" class="products-container" style="display:none; padding:0;">
+                        <h2>Related Products</h2>
+                        <div id="related-product-grid" class="product-grid"></div>
+                    </div>
+                </div>
+            `; 
+            
+            c.querySelector('#buy-now').onclick = () => navigate('payment', { items: [{...p, quantity: 1, id: p.id }], total: p.price }); 
+            c.querySelector('#add-to-cart').onclick = () => window.addToCart(p.id); 
+            
+            (async () => { 
+                const reviewsList = c.querySelector('#reviews-list'); 
+                const reviewFormContainer = c.querySelector('#review-form-container'); 
+                
+                try { 
+                    const snapshot = await db.collection('reviews').where('productId', '==', productId).orderBy('createdAt', 'desc').get(); 
+                    const reviews = snapshot.docs.map(d => d.data()); 
+                    if (reviews.length > 0) { 
+                        reviewsList.innerHTML = reviews.map(r => `<div class="item-card"><div class="star-rating">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div><p>${r.reviewText}</p><small><strong>${r.userName}</strong> on ${new Date(r.createdAt.toDate()).toLocaleDateString()}</small></div>`).join(''); 
+                    } else { 
+                        reviewsList.innerHTML = '<p>No reviews for this product yet.</p>'; 
+                    } 
+                    
+                    const orderSnap = await db.collection('orders').where('userId', '==', appState.user.uid).where('productId', '==', productId).where('status', '==', 'Delivered').get(); 
+                    if (!orderSnap.empty) { 
+                        reviewFormContainer.classList.remove('hidden'); 
+                        reviewFormContainer.innerHTML = `<div class="form-container" style="margin:0; padding:20px;"><h4>Write a Review</h4><form class="review-form"><div class="star-input"><input type="radio" name="rating" id="star5" value="5" /><label for="star5">☆</label><input type="radio" name="rating" id="star4" value="4" /><label for="star4">☆</label><input type="radio" name="rating" id="star3" value="3" /><label for="star3">☆</label><input type="radio" name="rating" id="star2" value="2" /><label for="star2">☆</label><input type="radio" name="rating" id="star1" value="1" /><label for="star1">☆</label></div><textarea id="review-text" placeholder="Share your thoughts..." required></textarea><button type="submit" class="primary-button">Submit Review</button></form></div>`; 
+                        reviewFormContainer.querySelector('form').onsubmit = (e) => { e.preventDefault(); const rating = e.target.rating.value; const reviewText = e.target['review-text'].value; if (!rating || !reviewText) return alert('Please provide a rating and a review.'); window.submitReview(productId, Number(rating), reviewText); }; 
+                    } 
+                } catch(err){ 
+                    reviewsList.innerHTML = '<p>Could not load reviews. Please check your connection or database rules.</p>'; 
+                    console.error("Error loading reviews:", err); 
+                } 
+
+                try {
+                    const relatedSnapshot = await db.collection('products').where('category', '==', p.category).limit(5).get();
+                    const relatedProducts = relatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(prod => prod.id !== productId).slice(0, 4);
+                    if(relatedProducts.length > 0) {
+                        const relatedGrid = c.querySelector('#related-product-grid');
+                        const wishlist = appState.userData.wishlist || [];
+                        relatedGrid.innerHTML = relatedProducts.map(rp => `<div class="product-card" data-productid="${rp.id}"><button class="wishlist-btn ${wishlist.includes(rp.id)?'active':''}" onclick="event.stopPropagation(); window.toggleWishlist('${rp.id}')">❤</button><img src="${rp.imageUrl}" alt="${rp.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;"><h3 style="margin:10px 0 5px;font-size:1rem;">${rp.name}</h3>${rp.averageRating ? `<div class="star-rating"><span class="stars">★</span> ${rp.averageRating.toFixed(1)} (${rp.reviewCount || 0})</div>` : ''}<p style="font-weight:bold;color:var(--primary-color);font-size:1.1rem;">₹${rp.price}</p></div>`).join('');
+                        relatedGrid.querySelectorAll('.product-card').forEach(card => card.onclick = () => navigate('productDetail', card.dataset.productid));
+                        c.querySelector('#related-products-container').style.display = 'block';
+                    }
+                } catch (err) { console.error("Error fetching related products:", err); }
+
+            })(); 
+            return c; 
+        }
+        
+        function renderComboOfferDetailPage(offerId) {
+            const offer = appState.comboOffers.find(o => o.id === offerId);
+            if (!offer) { const el = document.createElement('div'); el.className = 'form-container'; el.innerHTML = '<h2>Combo Offer not found</h2>'; return el; }
+
+            const c = document.createElement('div');
+            const includedProducts = offer.productIds.map(pId => appState.products.find(p => p.id === pId)).filter(Boolean);
+            const originalPrice = includedProducts.reduce((sum, p) => sum + p.price, 0);
+
+            c.innerHTML = `
+                <div class="form-container">
+                    <img src="${offer.imageUrl}" style="width:100%; max-width:400px; border-radius:8px; margin-top: 40px;">
+                    <h2 style="margin: 15px 0;">${offer.name}</h2>
+                    <p style="font-size:1.5rem; color:var(--primary-color); font-weight:bold;">
+                        ₹${offer.price}
+                        <span style="text-decoration: line-through; color: #777; font-size: 1.1rem; margin-left: 10px;">₹${originalPrice.toFixed(2)}</span>
+                    </p>
+                    <div style="text-align:left; padding: 0 10px; margin-top: 20px;">
+                        <h4>What's included in this combo:</h4>
+                        <div class="item-list">
+                            ${includedProducts.map(p => `<div class="item-card" style="display:flex; align-items:center; gap:15px;"><img src="${p.imageUrl}" style="width:50px;height:50px;border-radius:4px;object-fit:cover;" /><div><strong>${p.name}</strong><br><small>Price: ₹${p.price}</small></div></div>`).join('')}
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:20px;">
+                        <button id="add-combo-to-cart" class="secondary-button" style="flex:1;">Add to Cart</button>
+                        <button id="buy-combo-now" class="primary-button" style="flex:1;">Buy Now</button>
+                    </div>
+                </div>`;
+
+            c.querySelector('#buy-combo-now').onclick = () => {
+                const paymentItem = { id: offer.id, name: offer.name, quantity: 1, price: offer.price, isCombo: true };
+                navigate('payment', { items: [paymentItem], total: offer.price });
+            };
+            c.querySelector('#add-combo-to-cart').onclick = () => window.addComboToCart(offer.id);
+
+            return c;
+        }
+
+        function renderPaymentPage(paymentData) {
+            const { items, total } = paymentData;
+            const c = document.createElement('div');
+            c.className = 'form-container';
+            
+            c.innerHTML = `<h2 style="margin-top: 40px;">Complete Payment</h2> <div class="item-card" style="text-align:left;"> <h4>Order Summary</h4> ${items.map(p => `<p><strong>Item:</strong> ${p.name} (x${p.quantity})</p>`).join('')} <p><strong>Amount to Pay:</strong> ₹${total.toFixed(2)}</p></div><hr style="margin: 20px 0;" /><div style="text-align:center;"> <h4>Scan & Pay</h4> <img src="${YOUR_QR_CODE_URL}" alt="QR Code" style="max-width:200px; border-radius: 8px;"/> <p><strong>UPI ID:</strong> ${YOUR_UPI_ID}</p></div><hr style="margin: 20px 0;" /><h4>Confirm Your Payment</h4><p>After paying, please upload the screenshot and enter the UTR.</p><input type="text" id="utr" placeholder="Enter 12-Digit UTR" required/><label id="file-upload-label" for="screenshot"> <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg> <span style="margin-top: 10px;">Click to Upload Screenshot</span> </label> <input type="file" id="screenshot" accept="image/*" class="hidden"/> <button id="confirm-order" class="primary-button">I've Paid, Confirm Order</button>`;
+            
+            const screenshotInput = c.querySelector('#screenshot');
+            const uploadLabel = c.querySelector('#file-upload-label');
+
+            screenshotInput.onchange = () => {
+                const file = screenshotInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        uploadLabel.innerHTML = `<img src="${e.target.result}" alt="Screenshot Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; object-fit: contain;"> <span style="margin-top: 10px; font-size: 0.9rem; color: #555;">Click image to change</span>`;
+                        uploadLabel.style.padding = '10px';
+                    }
+                    reader.readAsDataURL(file);
+                }
+            };
+            const btn = c.querySelector('#confirm-order');
+            btn.onclick = async () => { 
+                const utr = c.querySelector('#utr').value; 
+                const file = c.querySelector('#screenshot').files[0]; 
+                if (!/^\d{12}$/.test(utr)) return alert('Enter a valid 12-digit UTR.'); 
+                if (!file) return alert('Upload a screenshot.'); 
+                btn.disabled = true; btn.textContent = 'Uploading...'; 
+                try { 
+                    const form = new FormData(); form.append('file', file); form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET); 
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: form }); 
+                    const data = await res.json(); 
+                    if (!data.secure_url) throw new Error('Upload failed.'); 
+                    const batch = db.batch(); 
+                    items.forEach(item => { 
+                        const orderRef = db.collection('orders').doc(); 
+                        const orderPayload = { userId: auth.currentUser.uid, userName: appState.userData.name, userEmail: appState.userData.email, shippingAddress: appState.userData.address, productName: item.name, price: item.price, quantity: item.quantity, orderDate: new Date(), status: 'Payment-Pending', utr, screenshotUrl: data.secure_url, statusHistory: [], isCombo: item.isCombo || false };
+                        if (item.isCombo) {
+                           orderPayload.comboOfferId = item.id;
+                        } else {
+                           orderPayload.productId = item.id;
+                        }
+                        batch.set(orderRef, orderPayload); 
+                    }); 
+                    await batch.commit(); 
+                    
+                    if (paymentData.fromCart) { 
+                        const cartBatch = db.batch(); 
+                        appState.cart.forEach(item => { 
+                            const itemRef = db.collection('users').doc(auth.currentUser.uid).collection('cart').doc(item.id); 
+                            cartBatch.delete(itemRef); 
+                        }); 
+                        await cartBatch.commit(); 
+                    } 
+                    alert('Order Placed!'); 
+                    appState.navigationHistory = []; // Clear history after order
+                    navigate('profile'); 
+                } catch (err) { 
+                    console.error("Order placement error:", err);
+                    alert('Could not place order.'); 
+                    btn.disabled = false; 
+                    btn.textContent = 'I\'ve Paid, Confirm Order'; 
+                } 
+            }; 
+            return c; 
+        }
+
+        function renderNotificationsPage() { 
+            const c = document.createElement('div'); c.className = 'form-container'; 
+            let headerHtml = `<div style="display:flex; justify-content:space-between; align-items:center;"><h2>Notifications</h2>`;
+            if (appState.notifications.length > 0) {
+                headerHtml += `<button class="danger-button" onclick="window.clearAllNotifications()">Clear All</button>`;
+            }
+            headerHtml += `</div>`;
+            c.innerHTML = `${headerHtml}<div class="item-list"></div>`; 
+            const l = c.querySelector('.item-list'); 
+            if (appState.notifications.length === 0) { l.innerHTML = '<p>No notifications.</p>'; } else { l.innerHTML = appState.notifications.map(n => `<div class="item-card" style="background:${n.isRead?'#fafafa':'#e8f5e9'};"><p>${n.message}</p><p style="font-size:0.8rem;color:#555;text-align:right;">${new Date(n.createdAt.toDate()).toLocaleString()}</p></div>`).join(''); const unread=appState.notifications.filter(n=>!n.isRead); if(unread.length>0){const b=db.batch(); unread.forEach(n=>{b.update(db.collection('notifications').doc(n.id),{isRead:true});}); b.commit().catch(console.error);} } return c;
+        }
+        function renderAdminNotificationsPage() { 
+            const c = document.createElement('div'); c.className = 'form-container'; 
+            let headerHtml = `<div style="display:flex; justify-content:space-between; align-items:center;"><h2>Admin Notifications</h2>`;
+            if (appState.adminNotifications.length > 0) {
+                headerHtml += `<button class="danger-button" onclick="window.clearAllAdminNotifications()">Clear All</button>`;
+            }
+            headerHtml += `</div>`;
+            c.innerHTML = `${headerHtml}<div class="item-list"></div>`; 
+            const l = c.querySelector('.item-list'); 
+            if (appState.adminNotifications.length === 0) { l.innerHTML = '<p>No notifications.</p>'; } else { l.innerHTML = appState.adminNotifications.map(n => `<div class="item-card" style="background:${n.isRead?'#fafafa':'#e8f5e9'};"><p>${n.message}</p><p style="font-size:0.8rem;color:#555;text-align:right;">${new Date(n.createdAt.toDate()).toLocaleString()}</p></div>`).join(''); const unread=appState.adminNotifications.filter(n=>!n.isRead); if(unread.length>0){const b=db.batch(); unread.forEach(n=>{b.update(db.collection('admin_notifications').doc(n.id),{isRead:true});}); b.commit().catch(console.error);} } return c;
+        }
+        function renderEditProfilePage(userIdToEdit) { const isSelf= !userIdToEdit || userIdToEdit===auth.currentUser.uid; const targetId=isSelf?auth.currentUser.uid:userIdToEdit; const c=document.createElement('div'); c.className='form-container'; c.innerHTML=`<div class="full-page-loader">Loading...</div>`; db.collection('users').doc(targetId).get().then(doc=>{if(!doc.exists){c.innerHTML=`<p>User not found.</p>`;return;} const user=doc.data();c.innerHTML=`<h2>Edit Profile</h2><input id="name" value="${user.name}"/><textarea id="address">${user.address}</textarea><input id="phone" value="${user.phone}"/><button id="save" class="primary-button">Save</button>`; c.querySelector('#save').onclick=async()=>{const data={name:c.querySelector('#name').value,address:c.querySelector('#address').value,phone:c.querySelector('#phone').value}; await db.collection('users').doc(targetId).update(data); alert('Updated!'); goBack();};}); return c;}
+        function displayProfilePage() { const c = document.createElement('div'); c.innerHTML = `<div class="full-page-loader">Loading...</div>`; (async () => { try { const query = await db.collection('orders').where('userId', '==', auth.currentUser.uid).orderBy('orderDate', 'desc').get(); const orders = query.docs.map(doc => ({ id: doc.id, ...doc.data() })); c.className = 'form-container'; let ordersHtml = orders.length === 0 ? '<p>No orders.</p>' : orders.map(o => { const canCancel = o.status === 'Payment-Pending' || o.status === 'Payment-Confirmed'; const notesHtml = o.statusHistory && o.statusHistory.length > 0 ? `<div class="order-notes"><strong>Admin Notes:</strong><br>${o.statusHistory.map(h => `<span>- ${h.reason} <em>(${new Date(h.timestamp.toDate()).toLocaleDateString()})</em></span>`).join('<br>')}</div>` : ''; return `<div class="item-card"><p><strong>Item:</strong> ${o.productName}</p><p><strong>Price:</strong> ₹${o.price}</p><p><strong>Status:</strong> <span class="status-${o.status.replace(/ /g, '-')}">${o.status}</span></p>${o.utr ? `<p><small>UTR: ${o.utr}</small></p>` : ''}${notesHtml}${canCancel ? `<button class="danger-button" style="margin-top:10px; width:100%;" onclick="window.cancelOrder('${o.id}')">Cancel Order</button>` : ''}</div>`; }).join(''); c.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h3 style="margin:0;">Details</h3><button onclick="navigate('editProfile')" class="secondary-button">Edit</button></div><div style="text-align:left;clear:both;"><p><strong>Name:</strong> ${appState.userData.name}</p><p><strong>Address:</strong> ${appState.userData.address}</p><p><strong>Email:</strong> ${appState.userData.email}</p><p><strong>Phone:</strong> ${appState.userData.phone}</p></div><hr/><h3>My Orders</h3><div class="item-list">${ordersHtml}</div>`; } catch (err) { console.error("Error fetching profile: ", err); c.innerHTML = `<p>Could not load profile.</p>`; }})(); return c;}
+        function renderWishlistPage() { const c = document.createElement('div'); c.className = 'page-container'; const wishlist = appState.userData.wishlist || []; if (wishlist.length === 0) { c.innerHTML = `<div class="form-container"><h2>My Wishlist</h2><p>You haven't added any products to your wishlist yet.</p></div>`; return c; } const wishlistedProducts = appState.products.filter(p => wishlist.includes(p.id)); c.innerHTML = `<div class="form-container" style="max-width: 1200px;"><h2>My Wishlist</h2></div><div class="product-grid">${wishlistedProducts.map(p => `<div class="product-card" data-productid="${p.id}"><button class="wishlist-btn active" onclick="event.stopPropagation(); window.toggleWishlist('${p.id}')">❤</button><img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;"><h3 style="margin:10px 0 5px;font-size:1rem;">${p.name}</h3><p style="font-weight:bold;color:var(--primary-color);font-size:1.1rem;">₹${p.price}</p></div>`).join('')}</div>`; c.querySelectorAll('.product-card').forEach(card => card.onclick = () => navigate('productDetail', card.dataset.productid)); return c; }
+        function renderCartPage() { 
+            const c = document.createElement('div'); c.className = 'form-container'; 
+            if (appState.cart.length === 0) { c.innerHTML = `<h2>My Cart</h2><p>Your cart is empty.</p>`; return c; } 
+            let subtotal = 0; 
+            const cartItemsHtml = appState.cart.map(item => { subtotal += item.price * item.quantity; const itemType = item.isCombo ? 'Combo' : 'Product'; return `<div class="item-card" style="display:flex; align-items:center; gap:15px;"><img src="${item.imageUrl}" alt="${item.name}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;"/><div style="flex:1;"><p><strong>${item.name}</strong> <small>(${itemType})</small></p><p>₹${item.price}</p></div><div style="text-align:right;"><input type="number" value="${item.quantity}" min="1" onchange="window.updateCartQuantity('${item.id}', this.value)" style="width: 60px; text-align:center; margin-bottom: 5px;" ${item.isCombo ? 'disabled' : ''}/><button class="danger-button" onclick="window.removeFromCart('${item.id}')">Remove</button></div></div>`; }).join(''); 
+            c.innerHTML = `<h2>My Cart</h2><div class="item-list">${cartItemsHtml}</div><hr/><div style="text-align:right; font-size:1.2rem; font-weight:bold; margin: 20px 0;"><p>Subtotal: ₹${subtotal.toFixed(2)}</p></div><button id="checkout-btn" class="primary-button">Proceed to Checkout</button>`; 
+            c.querySelector('#checkout-btn').onclick = async () => { 
+                const detailedCartItems = []; 
+                for (const item of appState.cart) { let details; if (item.isCombo) { details = appState.comboOffers.find(c => c.id === item.comboOfferId); } else { details = appState.products.find(p => p.id === item.productId); } if (details) { detailedCartItems.push({ ...details, id: details.id, quantity: item.quantity, isCombo: item.isCombo || false, price: item.price, name: item.name }); } } 
+                const paymentData = { items: detailedCartItems, total: subtotal, fromCart: true }; 
+                navigate('payment', paymentData); 
+            }; 
+            return c; 
+        }
+        
+        // --- ADMIN DASHBOARD ---
+        function displayAdminDashboard() {
+            const container = document.createElement('div');
+            container.className = 'page-container admin-dashboard';
+            container.innerHTML = `<div class="full-page-loader">Loading Dashboard...</div>`;
+            
+            (async () => {
+                const results = await Promise.allSettled([
+                    db.collection('users').orderBy('createdAt', 'desc').get(),
+                    db.collection('orders').orderBy('orderDate', 'desc').get(),
+                    db.collection('products').orderBy('createdAt', 'desc').get(),
+                    db.collection('comboOffers').orderBy('createdAt', 'desc').get()
+                ]);
+
+                const getData = (result, name) => result.status === 'fulfilled' ? result.value.docs.map(doc => ({ id: doc.id, ...doc.data() })) : (console.error(`Error fetching ${name}:`, result.reason), { error: true, name });
+
+                const allUsers = getData(results[0], 'Users');
+                const allOrders = getData(results[1], 'Orders');
+                const allProducts = getData(results[2], 'Products');
+                const allCombos = getData(results[3], 'Combo Offers');
+
+                const generateTableRows = (data, rowGenerator) => data.error ? `<tr><td colspan="100%" style="color:var(--danger-color); text-align:center;">Could not load ${data.name}.</td></tr>` : data.map(rowGenerator).join('');
+                
+                const totalRevenue = !allOrders.error ? allOrders.filter(o => o.status === 'Delivered').reduce((sum, order) => sum + (order.price * (order.quantity || 1)), 0) : 0;
+                const totalOrders = !allOrders.error ? allOrders.length : 0;
+                const totalUsers = !allUsers.error ? allUsers.length : 0;
+                
+                let topSellingProducts = [];
+                if (!allOrders.error && !allProducts.error) {
+                    const productSales = {};
+                    allOrders.filter(o => o.status === 'Delivered' && !o.isCombo).forEach(order => { productSales[order.productId] = (productSales[order.productId] || 0) + (order.quantity || 1); });
+                    topSellingProducts = Object.entries(productSales).sort(([, a], [, b]) => b - a).slice(0, 5).map(([productId, quantity]) => { const product = allProducts.find(p => p.id === productId); return { name: product ? product.name : 'Unknown Product', quantity }; });
+                }
+
+                container.innerHTML = `
+                    <h2>Admin Dashboard</h2>
+                    <div class="tab-nav">
+                        <button class="tab-btn active" data-tab="orders">Orders</button>
+                        <button class="tab-btn" data-tab="analytics">Analytics</button>
+                        <button class="tab-btn" data-tab="users">Users</button>
+                        <button class="tab-btn" data-tab="products">Products</button>
+                        <button class="tab-btn" data-tab="combos">Combo Offers</button>
+                    </div>
+
+                    <div id="orders-tab" class="tab-content active">
+                        <input type="search" id="admin-order-search" placeholder="Search Orders by customer, product, UTR..." style="margin-bottom: 15px;">
+                        <div class="table-wrapper"><table id="orders-table"><thead><tr><th>Customer</th><th>Product</th><th>UTR</th><th>Screenshot</th><th>Status</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+                    </div>
+
+                    <div id="analytics-tab" class="tab-content">
+                        <div class="stats-grid">
+                            <div class="stat-card"><h3>Total Revenue</h3><p>₹${totalRevenue.toFixed(2)}</p></div>
+                            <div class="stat-card"><h3>Total Orders</h3><p>${totalOrders}</p></div>
+                            <div class="stat-card"><h3>Total Users</h3><p>${totalUsers}</p></div>
+                        </div>
+                        <h3>Top 5 Selling Products</h3>
+                        <div class="table-wrapper"><table><thead><tr><th>Product Name</th><th>Quantity Sold</th></tr></thead><tbody>${topSellingProducts.map(p => `<tr><td>${p.name}</td><td>${p.quantity}</td></tr>`).join('') || `<tr><td colspan="2">No sales data yet.</td></tr>`}</tbody></table></div>
+                    </div>
+
+                    <div id="users-tab" class="tab-content">
+                        <input type="search" id="admin-user-search" placeholder="Search Users by name or email..." style="margin-bottom: 15px;">
+                        <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Email</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+                    </div>
+
+                    <div id="products-tab" class="tab-content">
+                        <button class="primary-button" onclick="navigate('productForm')" style="width: auto; margin-bottom: 20px;">Add New Product</button>
+                        <input type="search" id="admin-product-search" placeholder="Search Products by name or category..." style="margin-bottom: 15px;">
+                        <div class="table-wrapper"><table><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Category</th><th>Size</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+                    </div>
+                    
+                    <div id="combos-tab" class="tab-content">
+                         <button class="primary-button" onclick="navigate('comboOfferForm')" style="width: auto; margin-bottom: 20px;">Add New Combo Offer</button>
+                         <input type="search" id="admin-combo-search" placeholder="Search Combo Offers by name..." style="margin-bottom: 15px;">
+                         <div class="table-wrapper"><table><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+                    </div>`;
+                
+                const renderOrders = (orders) => { container.querySelector('#orders-tab tbody').innerHTML = generateTableRows(orders, o => `<tr><td class="wrap-text">${o.userName}<br><small>${o.userEmail}</small></td><td class="wrap-text">${o.productName} (₹${o.price}) ${o.isCombo ? '<span class="combo-badge" style="position:static;display:inline-block;margin-left:5px;font-size:0.7rem;">C</span>' : ''}</td><td>${o.utr||'N/A'}</td><td><a href="${o.screenshotUrl}" target="_blank">View</a></td><td><select id="status-${o.id}" onchange="window.updateOrderStatus('${o.id}','${o.userId}')">${['Payment-Pending','Payment-Confirmed','Shipped','Delivered', 'Cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s.replace('-',' ')}</option>`).join('')}</select></td><td><button class="danger-button" onclick="window.cancelOrderByAdmin('${o.id}', '${o.userId}')">Cancel</button></td></tr>`); };
+                const renderUsers = (users) => { container.querySelector('#users-tab tbody').innerHTML = generateTableRows(users, u => `<tr><td class="wrap-text">${u.name}</td><td>${u.email} ${u.isAdmin?'<strong>(A)</strong>':''}</td><td><div style="display:flex; flex-direction:column; gap:5px;"><button class="secondary-button" onclick="window.sendAdminMessage('${u.id}')">Message</button><button class="secondary-button" onclick="navigate('editProfile', '${u.id}')">Edit</button><button class="danger-button" onclick="window.deleteUser('${u.id}', '${u.name}')">Delete</button></div></td></tr>`); };
+                const renderProducts = (products) => { container.querySelector('#products-tab tbody').innerHTML = generateTableRows(products, p => `<tr><td><img src="${p.imageUrl}" alt="${p.name}" style="width:50px; height:50px; object-fit:cover; border-radius:4px;"/></td><td class="wrap-text">${p.name}</td><td>₹${p.price}</td><td>${p.category}</td><td>${p.size || 'N/A'}</td><td><div style="display:flex; flex-direction:column; gap:5px;"><button class="secondary-button" onclick="window.editProduct('${p.id}')">Edit</button><button class="danger-button" onclick="window.deleteProduct('${p.id}', '${p.name}')">Delete</button></div></td></tr>`); };
+                const renderCombos = (combos) => { container.querySelector('#combos-tab tbody').innerHTML = generateTableRows(combos, c => `<tr><td><img src="${c.imageUrl}" alt="${c.name}" style="width:50px; height:50px; object-fit:cover; border-radius:4px;"/></td><td class="wrap-text">${c.name}</td><td>₹${c.price}</td><td>${c.isActive ? 'Active' : 'Inactive'}</td><td><div style="display:flex; flex-direction:column; gap:5px;"><button class="secondary-button" onclick="window.editComboOffer('${c.id}')">Edit</button><button class="danger-button" onclick="window.deleteComboOffer('${c.id}', '${c.name}')">Delete</button></div></td></tr>`); };
+                
+                renderOrders(allOrders); renderUsers(allUsers); renderProducts(allProducts); renderCombos(allCombos);
+                
+                container.querySelector('#admin-order-search').oninput = (e) => { const term = e.target.value.toLowerCase(); renderOrders(allOrders.error ? allOrders : allOrders.filter(o => ((o.userName || '').toLowerCase().includes(term) || (o.userEmail || '').toLowerCase().includes(term) || (o.productName || '').toLowerCase().includes(term) || (o.utr && o.utr.includes(term))))); };
+                container.querySelector('#admin-user-search').oninput = (e) => { const term = e.target.value.toLowerCase(); renderUsers(allUsers.error ? allUsers : allUsers.filter(u => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term))); };
+                container.querySelector('#admin-product-search').oninput = (e) => { const term = e.target.value.toLowerCase(); renderProducts(allProducts.error ? allProducts : allProducts.filter(p => p.name.toLowerCase().includes(term) || p.category.toLowerCase().includes(term))); };
+                container.querySelector('#admin-combo-search').oninput = (e) => { const term = e.target.value.toLowerCase(); renderCombos(allCombos.error ? allCombos : allCombos.filter(c => c.name.toLowerCase().includes(term))); };
+
+                container.querySelectorAll('.tab-nav .tab-btn').forEach(btn => { btn.onclick = () => { container.querySelector('.tab-nav .active').classList.remove('active'); container.querySelector('.tab-content.active').classList.remove('active'); btn.classList.add('active'); container.querySelector(`#${btn.dataset.tab}-tab`).classList.add('active'); }; });
+            })();
+            return container;
+        }
+
+        function renderProductForm(productId = null) { 
+            const c = document.createElement('div'); 
+            c.className = 'form-container'; 
+            const showForm = (p={}) => { 
+                c.innerHTML = `<h2>${productId?'Edit':'Add'} Product</h2> <input id="name" placeholder="Name" value="${p.name||''}"/> <textarea id="description" placeholder="Description">${p.description||''}</textarea> <input id="price" type="number" placeholder="Price" value="${p.price||''}"/> <input id="category" placeholder="Category (e.g., Pots, Plants)" value="${p.category||''}"/> <input id="subcategory" placeholder="Subcategory (e.g., Ceramic)" value="${p.subcategory||''}"/> <select id="size"><option value="">-- Select Size --</option><option value="Small" ${p.size === 'Small' ? 'selected': ''}>Small</option><option value="Medium" ${p.size === 'Medium' ? 'selected': ''}>Medium</option><option value="Large" ${p.size === 'Large' ? 'selected': ''}>Large</option></select> <div style="text-align:left; margin-bottom:15px; display:flex; align-items:center;"> <input type="checkbox" id="isFeatured" style="width:auto; margin:0 10px 0 0;" ${p.isFeatured ? 'checked' : ''} /> <label for="isFeatured">Mark as Featured</label> </div><label id="file-upload-label" for="image">Upload Image</label> <input type="file" id="image" accept="image/*" class="hidden"/> <p id="file-name">No file selected</p> <img id="preview" src="${p.imageUrl||''}" style="max-width:100px;display:${p.imageUrl?'block':'none'};margin:0 auto 15px;"/> <button id="save" class="primary-button">Save</button>`; 
+                
+                const saveBtn = c.querySelector('#save'), fileInput = c.querySelector('#image'); 
+                fileInput.onchange = () => { if (fileInput.files.length>0) { c.querySelector('#file-name').textContent = fileInput.files[0].name; const reader = new FileReader(); reader.onload = e => { c.querySelector('#preview').src = e.target.result; c.querySelector('#preview').style.display = 'block'; }; reader.readAsDataURL(fileInput.files[0]); } }; 
+                
+                saveBtn.onclick = async () => { 
+                    const data = { name: c.querySelector('#name').value, description: c.querySelector('#description').value, price: Number(c.querySelector('#price').value), category: c.querySelector('#category').value, subcategory: c.querySelector('#subcategory').value, size: c.querySelector('#size').value, isFeatured: c.querySelector('#isFeatured').checked }; 
+                    if (!data.name||!data.price||!data.category) { return alert('Fill name, price, and category'); } 
+                    saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; 
+                    try { 
+                        let imageUrl = p.imageUrl || '';
+                        if (fileInput.files[0]) { 
+                            const form = new FormData(); form.append('file', fileInput.files[0]); form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET); 
+                            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: form }); 
+                            const d = await res.json(); imageUrl = d.secure_url; 
+                        } 
+                        if (!imageUrl) { alert('Image is required!'); saveBtn.disabled = false; saveBtn.textContent = 'Save'; return; }
+                        data.imageUrl = imageUrl; 
+                        if (productId) { 
+                            await db.collection('products').doc(productId).update(data); 
+                        } else { 
+                            data.createdAt = new Date(); data.averageRating = 0; data.reviewCount = 0; 
+                            await db.collection('products').add(data); 
+                        } 
+                        alert('Saved!'); 
+                        navigate('admin'); 
+                    } catch (err) { alert('Failed.'); saveBtn.disabled = false; saveBtn.textContent = 'Save'; } 
+                }; 
+            }; 
+            if(productId){db.collection('products').doc(productId).get().then(doc=>doc.exists?showForm({id:doc.id,...doc.data()}):(alert("Not found!"),navigate('admin'))); } else { showForm();} 
+            return c; 
+        }
+
+        function renderComboOfferForm(offerId = null) {
+            const c = document.createElement('div');
+            c.className = 'form-container';
+            const showForm = (offer = {}) => {
+                const productChecklist = appState.products.map(p => `<label><input type="checkbox" name="product" value="${p.id}" ${offer.productIds && offer.productIds.includes(p.id) ? 'checked' : ''}> ${p.name} (₹${p.price})</label>`).join('');
+                c.innerHTML = `
+                    <h2>${offerId ? 'Edit' : 'Add'} Combo Offer</h2>
+                    <input id="name" placeholder="Combo Name" value="${offer.name || ''}" />
+                    <input id="price" type="number" placeholder="Special Price" value="${offer.price || ''}" />
+                    <p style="text-align:left; font-weight:bold;">Select Products for this Combo:</p>
+                    <div id="product-checklist">${productChecklist}</div>
+                    <div style="text-align:left; margin-bottom:15px; display:flex; align-items:center;">
+                        <input type="checkbox" id="isActive" style="width:auto; margin:0 10px 0 0;" ${offer.isActive !== false ? 'checked' : ''}>
+                        <label for="isActive">Make this offer active</label>
+                    </div>
+                    <label id="file-upload-label" for="image">Upload Combo Image</label>
+                    <input type="file" id="image" accept="image/*" class="hidden" />
+                    <p id="file-name">No file selected</p>
+                    <img id="preview" src="${offer.imageUrl || ''}" style="max-width:100px;display:${offer.imageUrl ? 'block' : 'none'};margin:0 auto 15px;"/>
+                    <button id="save" class="primary-button">Save Offer</button>
+                `;
+
+                const saveBtn = c.querySelector('#save'), fileInput = c.querySelector('#image');
+                fileInput.onchange = () => { if (fileInput.files.length > 0) { c.querySelector('#file-name').textContent = fileInput.files[0].name; const reader = new FileReader(); reader.onload = e => { c.querySelector('#preview').src = e.target.result; c.querySelector('#preview').style.display = 'block'; }; reader.readAsDataURL(fileInput.files[0]); } };
+                
+                saveBtn.onclick = async () => {
+                    const selectedProducts = Array.from(c.querySelectorAll('input[name="product"]:checked')).map(cb => cb.value);
+                    const data = { name: c.querySelector('#name').value, price: Number(c.querySelector('#price').value), isActive: c.querySelector('#isActive').checked, productIds: selectedProducts };
+                    if (!data.name || !data.price || data.productIds.length < 2) { return alert('Please fill name, price, and select at least 2 products.'); }
+                    saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
+                    try {
+                        let imageUrl = offer.imageUrl || '';
+                        if (fileInput.files[0]) {
+                            const form = new FormData(); form.append('file', fileInput.files[0]); form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: form });
+                            const d = await res.json(); imageUrl = d.secure_url;
+                        }
+                        if (!imageUrl) { alert('Image is required!'); saveBtn.disabled = false; saveBtn.textContent = 'Save'; return; }
+                        data.imageUrl = imageUrl;
+                        if (offerId) { await db.collection('comboOffers').doc(offerId).update(data); } else { data.createdAt = new Date(); await db.collection('comboOffers').add(data); }
+                        alert('Combo Offer Saved!');
+                        navigate('admin');
+                    } catch (err) { alert('Failed to save offer.'); console.error(err); saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+                };
+            };
+            if (offerId) { db.collection('comboOffers').doc(offerId).get().then(doc => doc.exists ? showForm({ id: doc.id, ...doc.data() }) : (alert("Offer not found!"), navigate('admin'))); } else { showForm(); }
+            return c;
+        }
+
+        window.toggleWishlist = async (productId) => { const userRef = db.collection('users').doc(auth.currentUser.uid); let currentWishlist = appState.userData.wishlist || []; if (currentWishlist.includes(productId)) { currentWishlist = currentWishlist.filter(id => id !== productId); } else { currentWishlist.push(productId); } await userRef.update({ wishlist: currentWishlist }); appState.userData.wishlist = currentWishlist; renderApp(); };
+        window.addToCart = async (productId) => { const product = appState.products.find(p => p.id === productId); const cartRef = db.collection('users').doc(auth.currentUser.uid).collection('cart'); const existingItem = appState.cart.find(item => item.productId === productId); if (existingItem) { await cartRef.doc(existingItem.id).update({ quantity: existingItem.quantity + 1 }); } else { await cartRef.add({ productId: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl, quantity: 1, isCombo: false }); } alert(`${product.name} added to cart!`); };
+        window.addComboToCart = async (offerId) => { const offer = appState.comboOffers.find(o => o.id === offerId); const cartRef = db.collection('users').doc(auth.currentUser.uid).collection('cart'); const existingItem = appState.cart.find(item => item.comboOfferId === offerId); if (existingItem) { alert('This combo is already in your cart.'); return; } await cartRef.add({ comboOfferId: offer.id, name: offer.name, price: offer.price, imageUrl: offer.imageUrl, quantity: 1, isCombo: true }); alert(`${offer.name} added to cart!`); };
+        window.updateCartQuantity = async (cartItemId, quantity) => { const newQuantity = Number(quantity); if (newQuantity < 1) return; await db.collection('users').doc(auth.currentUser.uid).collection('cart').doc(cartItemId).update({ quantity: newQuantity }); };
+        window.removeFromCart = async (cartItemId) => { if (confirm('Remove this item from your cart?')) { await db.collection('users').doc(auth.currentUser.uid).collection('cart').doc(cartItemId).delete(); } };
+        
+        window.submitReview = async (productId, rating, reviewText) => {
+            const reviewData = { productId, userId: auth.currentUser.uid, userName: appState.userData.name, rating, reviewText, createdAt: new Date() };
+            try { await db.collection('reviews').add(reviewData); alert('Review submitted!'); await fetchProducts(); navigate('productDetail', productId); } catch (err) { console.error("Review submission error:", err); alert('Failed to submit review.'); }
+        };
+
+        window.clearAllNotifications = async () => { if (confirm('Are you sure you want to delete all your notifications?')) { try { const deletePromises = appState.notifications.map(n => db.collection('notifications').doc(n.id).delete()); await Promise.all(deletePromises); } catch(e) { console.error("Error clearing notifications:", e); alert('Could not clear notifications.'); } } };
+        window.clearAllAdminNotifications = async () => { if (confirm('Are you sure you want to delete all admin notifications?')) { try { const deletePromises = appState.adminNotifications.map(n => db.collection('admin_notifications').doc(n.id).delete()); await Promise.all(deletePromises); } catch(e) { console.error("Error clearing admin notifications:", e); alert('Could not clear admin notifications.'); } } };
+        window.sendAdminMessage = async (uid) => { const msg = prompt("Message:"); if (msg && msg.trim()) { try { await db.collection('notifications').add({ userId: uid, message: msg.trim(), isRead: false, createdAt: new Date() }); alert('Sent!'); } catch(err) { alert('Failed to send message.'); console.error("Send message error:", err); } } };
+        window.deleteUser = async (userId, userName) => { if(confirm(`DELETE user "${userName}"? This cannot be undone.`)){ try { await db.collection('users').doc(userId).delete(); await db.collection('admin_notifications').add({ message: `User ${userName} deleted.`, isRead: false, createdAt: new Date() }); alert('User deleted.'); } catch(err) { alert('Failed to delete user.'); console.error("Delete user error:", err); } } };
+        window.updateOrderStatus = async (orderId, userId) => { const newStatus = document.getElementById(`status-${orderId}`).value; const reason = prompt(`Reason for changing status to "${newStatus}" (optional, will be sent to user):`); if(reason === null) { renderApp(); return; } const historyEntry = { status: newStatus, reason: reason || 'Status updated by admin.', timestamp: new Date() }; try { await db.collection('orders').doc(orderId).update({ status: newStatus, statusHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry) }); await db.collection('notifications').add({ userId, message: `Order status is now: ${newStatus}. ${reason ? 'Note: '+reason : ''}`, createdAt: new Date(), isRead: false }); alert('Status updated & user notified!'); } catch (err) { alert('Failed to update status.'); console.error("Update status error:", err); } };
+        window.cancelOrderByAdmin = async (orderId, userId) => { if (confirm('Cancel this order?')) { const reason = prompt("Reason for cancellation (sent to user):"); if (reason === null) return; const historyEntry = { status: 'Cancelled', reason: reason || 'Order cancelled by admin.', timestamp: new Date() }; try { await db.collection('orders').doc(orderId).update({ status: 'Cancelled', statusHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry) }); await db.collection('notifications').add({ userId, message: `Your order was cancelled. Note: ${reason || 'Cancelled by admin.'}`, createdAt: new Date(), isRead: false }); alert('Order cancelled & user notified!'); } catch (err) { alert('Failed to cancel order.'); console.error("Admin cancel order error:", err); } } };
+        window.cancelOrder = async (orderId) => { if (confirm('Are you sure you want to cancel this order?')) { try { await db.collection('orders').doc(orderId).update({ status: 'Cancelled' }); await db.collection('admin_notifications').add({ message: `User ${appState.userData.name} cancelled order (...${orderId.slice(-6)}).`, isRead: false, createdAt: new Date() }); alert('Order cancelled.'); } catch (err) { alert('Could not cancel order.'); console.error("User cancel order error:", err); } } };
+        window.editProduct = (pid) => navigate('productForm', pid);
+        window.deleteProduct = async (pid, name) => { if (confirm(`Delete "${name}"?`)) { try { await db.collection('products').doc(pid).delete(); await db.collection('admin_notifications').add({ message: `Product "${name}" was deleted.`, isRead: false, createdAt: new Date() }); alert('Deleted!'); } catch (err) { alert('Failed to delete product.'); console.error("Delete product error:", err); } } };
+        window.editComboOffer = (cid) => navigate('comboOfferForm', cid);
+        window.deleteComboOffer = async (cid, name) => { if (confirm(`Delete combo offer "${name}"?`)) { try { await db.collection('comboOffers').doc(cid).delete(); await db.collection('admin_notifications').add({ message: `Combo Offer "${name}" was deleted.`, isRead: false, createdAt: new Date() }); alert('Deleted!'); } catch (err) { alert('Failed to delete combo offer.'); console.error("Delete combo error:", err); } } };
+        
+        renderApp();
+    </script>
+</body>
+</html>
